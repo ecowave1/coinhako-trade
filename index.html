@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Trading Simulation - Always Lose</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .coin-list, .order-confirmation {
+            display: none;
+        }
+        .coin-list.active, .order-confirmation.active {
+            display: block;
+        }
+        .coin-list button, .expiry-time button {
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: left;
+        }
+        .expiry-time {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .expiry-time button {
+            width: 45px;
+            height: 45px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .selected {
+            background-color: #d9eaff;
+            border: 1px solid #007bff;
+        }
+        .quantity-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .confirm-button, .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .back-button {
+            background-color: #555;
+        }
+        .balance {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .history {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .history-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="balance">Balance: $<span id="balance">550.00</span></div>
+
+    <div class="coin-list active">
+        <h2>Select a Coin</h2>
+        <button onclick="selectCoin('BTC')">BTC</button>
+        <button onclick="selectCoin('USDT')">USDT</button>
+        <button onclick="selectCoin('SOL')">SOL</button>
+        <button onclick="selectCoin('ETH')">ETH</button>
+        <button onclick="selectCoin('KRP')">KRP</button>
+        <button onclick="selectCoin('MATIC')">MATIC</button>
+        <button onclick="selectCoin('DOGE')">DOGE</button>
+        <button onclick="selectCoin('SHIB')">SHIB</button>
+        <button onclick="selectCoin('TRON')">TRON</button>
+    </div>
+    
+    <div class="order-confirmation">
+        <h2>Order Confirmation</h2>
+        <div class="order-details">
+            <div id="selected-coin"></div>
+            <div>Direction: Buy up</div>
+            <div>Current price: <span id="current-price">60692.254000</span></div>
+        </div>
+        
+        <div class="expiry-time">
+            <button id="60s" class="selected" onclick="selectTime('60s')">60S<br>20%</button>
+            <button id="90s" onclick="selectTime('90s')">90S<br>40%</button>
+            <button id="120s" onclick="selectTime('120s')">120S<br>50%</button>
+            <button id="180s" onclick="selectTime('180s')">180S<br>60%</button>
+            <button id="300s" onclick="selectTime('300s')">300S<br>70%</button>
+        </div>
+        
+        <input type="number" id="quantity" class="quantity-input" placeholder="Please enter the quantity you want to buy">
+        
+        <button class="confirm-button" onclick="confirmOrder()">Confirm the Order</button>
+        <button class="back-button" onclick="goBack()">Back to Coin Selection</button>
+    </div>
+
+    <div class="loading">Processing...</div>
+
+    <div class="history">
+        <h4>Order History</h4>
+        <div id="history-list">
+            <!-- History items will appear here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedCoin = '';
+    let balance = 550.00;
+    let historyList = [];
+
+    function selectCoin(coin) {
+        selectedCoin = coin;
+        document.getElementById('selected-coin').innerText = 'Name: ' + selectedCoin;
+        document.querySelector('.coin-list').classList.remove('active');
+        document.querySelector('.order-confirmation').classList.add('active');
+    }
+
+    function selectTime(time) {
+        document.querySelectorAll('.expiry-time button').forEach(button => {
+            button.classList.remove('selected');
+        });
+        document.getElementById(time).classList.add('selected');
+    }
+
+    function confirmOrder() {
+        const quantity = document.getElementById('quantity').value;
+        if (!quantity) {
+            alert("Please enter a quantity.");
+            return;
+        }
+
+        const selectedTime = document.querySelector('.expiry-time .selected').id;
+        const waitTime = parseInt(selectedTime);
+
+        // Show loading message
+        document.querySelector('.loading').style.display = 'block';
+
+        // Simulate waiting for the selected time (in seconds)
+        setTimeout(() => {
+            // After waiting, hide the loading message
+            document.querySelector('.loading').style.display = 'none';
+
+            // Admin control: Force outcome to be a loss
+            balance -= parseFloat(quantity);
+            alert(`You lost!\nCoin: ${selectedCoin}\nQuantity: ${quantity}`);
+            
+            if (balance <= 0) {
+                balance = 0;
+                alert("You have lost all your balance!");
+            }
+
+            updateBalance();
+            addToHistory(selectedCoin, quantity, 'lose');
+
+        }, waitTime * 1000); // Convert seconds to milliseconds
+    }
+
+    function goBack() {
+        document.querySelector('.order-confirmation').classList.remove('active');
+        document.querySelector('.coin-list').classList.add('active');
+    }
+
+    function updateBalance() {
+        document.getElementById('balance').innerText = balance.toFixed(2);
+    }
+
+    function addToHistory(coin, quantity, outcome) {
+        const historyItem = `Coin: ${coin}, Quantity: ${quantity}, Result: ${outcome === 'win' ? 'Win' : 'Lose'}`;
+        historyList.push(historyItem);
+        const historyListElement = document.getElementById('history-list');
+        const newHistoryElement = document.createElement('div');
+        newHistoryElement.classList.add('history-item');
+        newHistoryElement.innerText = historyItem;
+        historyListElement.appendChild(newHistoryElement);
+    }
+</script>
+
+</body>
+</html>
